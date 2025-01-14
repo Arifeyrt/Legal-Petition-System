@@ -1,5 +1,6 @@
 import re
 from datetime import datetime
+
 def get_personal_info():
     """
     Kullanıcıdan davacı ve davalı bilgilerini alır.
@@ -38,6 +39,7 @@ def get_tarih():
     if not tarih.strip():
         tarih = datetime.now().strftime("%d.%m.%Y")
     return tarih
+
 def update_defendant_address(dilekce_text, yeni_adres):
     """
     Dilekçe metnindeki DAVALI başlığı altındaki adresi günceller.
@@ -63,13 +65,13 @@ def update_defendant_address(dilekce_text, yeni_adres):
 
     return "\n".join(updated_lines)  # Güncellenmiş satırları birleştir
 
-
 def get_marriage_date():
     """
     Kullanıcıdan evlenme tarihini alır.
     """
     marriage_date = input("Lütfen evlenme tarihini giriniz (GG.AA.YYYY): ")
     return marriage_date
+
 def get_alimony_amount():
     """
     Kullanıcıdan nafaka miktarını alır ve geçerli bir sayı olduğundan emin olur.
@@ -80,6 +82,7 @@ def get_alimony_amount():
             return nafaka_miktari  # Örnek: "3000" döner
         else:
             print("Geçersiz miktar girdiniz. Lütfen tekrar deneyin.")
+
 def update_alimony_in_text(dilekce_text, nafaka_miktari):
     """
     Açıklamalar ve Sonuç & Talep kısmındaki nafaka miktarını günceller.
@@ -130,6 +133,7 @@ def update_tazminat_in_text(dilekce_text, tazminat_miktari):
     )
 
     return dilekce_text
+
 def get_children_details():
     """
     Kullanıcıdan çocuk sayısını, isimlerini ve doğum yıllarını alır.
@@ -158,16 +162,16 @@ def update_children_in_text(dilekce_text, children, personal_info):
     """
     # "müşterek çocukları bulunmaktadır" veya benzer ifadeleri arar
     match = re.search(
-    r"(Bu evlilikten.*?müşterek çocukları bulunmaktadır\.?)",  # Nokta opsiyonel olabilir
-    dilekce_text,
-    re.DOTALL
-)
+        r"(Bu evlilikten.*?müşterek çocukları bulunmaktadır\.?)",  # Nokta opsiyonel olabilir
+        dilekce_text,
+        re.DOTALL
+    )
 
     if match:
         if not children:
             # Çocuk yoksa ilgili ifadeyi güncelle
             dilekce_text = re.sub(
-                r"(Bu evlilikten).*?müşterek çocukları bulunmaktadır\.",
+                r"(Bu evlilikten).*?müşterek çocukları bulunmaktadır\.?",
                 r"Bu evlilikten müşterek çocukları bulunmamaktadır.",
                 dilekce_text,
                 flags=re.DOTALL
@@ -185,53 +189,54 @@ def update_children_in_text(dilekce_text, children, personal_info):
 
             # İlgili ifadeyi güncelle
             dilekce_text = re.sub(
-                r"(Bu evlilikten).*?müşterek çocukları bulunmaktadır\.",
+                r"(Bu evlilikten).*?müşterek çocukları bulunmaktadır\.?",
                 replacement,
                 dilekce_text,
                 flags=re.DOTALL
             )
-                  
-             # Açıklamalar kısmındaki nafaka detaylarını güncelle
+
+            # Açıklamalar kısmındaki nafaka detaylarını güncelle
             nafaka_text = ", ".join(
-            [f"Müşterek çocuk {child['name']} için aylık {child['nafaka']} TL iştirak nafakası"
-             for child in children]
+                [f"Müşterek çocuk {child['name']} için aylık {child['nafaka']} TL iştirak nafakası"
+                 for child in children]
             )
             nafaka_sentence = f"{nafaka_text} talep edilmektedir."
             dilekce_text = re.sub(
-            r"(Müşterek çocuk.*?iştirak nafakasına hükmedilmesi talep edilmektedir\.)",
-            nafaka_sentence,
-            dilekce_text,
-            flags=re.DOTALL
-        )
+                r"(Müşterek çocuk.*?iştirak nafakasına hükmedilmesi talep edilmektedir\.)",
+                nafaka_sentence,
+                dilekce_text,
+                flags=re.DOTALL
+            )
 
-           # Sonuç ve Talep kısmını güncelle
+            # Sonuç ve Talep kısmını güncelle
             if children:
-             sonuc_nafaka_text = " ve ".join(
-              [f"Müşterek çocuk {child['name']} için aylık {child['nafaka']} TL iştirak nafakasına hükmedilmesine"
-              for child in children]
-        )
-            dilekce_text = re.sub(
-            r"(4\. Müşterek çocuk.*?iştirak nafakasına hükmedilmesine,)",
-            f"4. {sonuc_nafaka_text},",
-            dilekce_text,
-            flags=re.DOTALL
-        )
-            
-           # Sonuç ve Talep kısmını güncelle
+                sonuc_nafaka_text = " ve ".join(
+                    [f"Müşterek çocuk {child['name']} için aylık {child['nafaka']} TL iştirak nafakasına hükmedilmesine"
+                     for child in children]
+                )
+                dilekce_text = re.sub(
+                    r"(4\. Müşterek çocuk.*?iştirak nafakasına hükmedilmesine,)",
+                    f"4. {sonuc_nafaka_text},",
+                    dilekce_text,
+                    flags=re.DOTALL
+                )
+
+            # Sonuç ve Talep kısmını güncelle
             if children:
-             sonuc_velayet_text = " ve ".join(
-              [f"Müşterek çocuk {child['name']} velayetinin {child['velayet']} {personal_info['davacı_adi_soyadi'] if child['velayet'] == 'davacı' else personal_info['davalı_adi_soyadi']} verilmesine" for child in children]
-        )
-            dilekce_text = re.sub(
-            r"(5\. Müşterek çocuk.*?velayetinin.*?verilmesine,)",
-            f"5. {sonuc_velayet_text },",
-            dilekce_text,
-            flags=re.DOTALL
-        )
+                sonuc_velayet_text = " ve ".join(
+                    [f"Müşterek çocuk {child['name']} velayetinin {child['velayet']} {personal_info['davacı_adi_soyadi'] if child['velayet'] == 'davacı' else personal_info['davalı_adi_soyadi']} verilmesine" for child in children]
+                )
+                dilekce_text = re.sub(
+                    r"(5\. Müşterek çocuk.*?velayetinin.*?verilmesine,)",
+                    f"5. {sonuc_velayet_text },",
+                    dilekce_text,
+                    flags=re.DOTALL
+                )
     else:
         print("Hedef ifade bulunamadı: 'müşterek çocukları bulunmaktadır.'")
 
     return dilekce_text
+
 def replace_above_signature_with_davaci_name(dilekce_text, personal_info):
     """
     İmzanın üstünde bulunan davacının adını günceller.
@@ -245,8 +250,7 @@ def replace_above_signature_with_davaci_name(dilekce_text, personal_info):
     )
     return dilekce_text
 
-
-def customize_dilekce(dilekce_text, personal_info, court_info, tarih, marriage_date, alimony_status, nafaka_miktari,tazminat_miktarı, children, child_status):
+def customize_dilekce(dilekce_text, personal_info, court_info, tarih, marriage_date, alimony_status, nafaka_miktari, tazminat_miktari, children, child_status):
     """
     Dilekçe metnini verilen kişisel bilgiler ve mahkeme şehriyle özelleştirir.
 
@@ -257,48 +261,46 @@ def customize_dilekce(dilekce_text, personal_info, court_info, tarih, marriage_d
     """
     # Mahkeme kısmını değiştirme
     dilekce_text = re.sub(
-        r"(TÜRKİYE CUMHURİYETİ\s*[^\n]+ MAHKEMESİ’NE)", 
-        f"TÜRKİYE CUMHURİYETİ\n{court_info['mahkeme_sehri']} AİLE MAHKEMESİ’NE", 
+        r"(TÜRKİYE CUMHURİYETİ\s*[^\n]+ MAHKEMESİ’NE)",
+        f"TÜRKİYE CUMHURİYETİ\n{court_info['mahkeme_sehri']} AİLE MAHKEMESİ’NE",
         dilekce_text
     )
-    
+
     # "DAVACI: Adı-Soyadı" kısmını değiştirme
     dilekce_text = re.sub(
-        r"(DAVACI:\s*Adı-Soyadı:)\s*[^\n]+", 
-        f"\\1 {personal_info['davacı_adi_soyadi']}", 
+        r"(DAVACI:\s*Adı-Soyadı:)\s*[^\n]+",
+        f"\\1 {personal_info['davacı_adi_soyadi']}",
         dilekce_text
     )
-    
+
     # "DAVACI: T.C. Kimlik No" kısmını değiştirme
     dilekce_text = re.sub(
-        r"(T\.C\. Kimlik No:)\s*\d+", 
-        f"\\1 {personal_info['davacı_tc']}", 
+        r"(T\.C\. Kimlik No:)\s*\d+",
+        f"\\1 {personal_info['davacı_tc']}",
         dilekce_text
     )
 
     # "DAVACI: Adresi" kısmını değiştirme
     dilekce_text = re.sub(
-        r"(Adres:)\s*[^\n]+", 
-        f"\\1 {personal_info['davacı_adres']}", 
+        r"(Adres:)\s*[^\n]+",
+        f"\\1 {personal_info['davacı_adres']}",
         dilekce_text,
         count=1  # İlk geçen adresi değiştir (davacı adresi)
     )
-    
+
     # "DAVALI: Adı-Soyadı" kısmını değiştirme
     dilekce_text = re.sub(
-        r"(DAVALI:\s*Adı-Soyadı:)\s*[^\n]+", 
-        f"\\1 {personal_info['davalı_adi_soyadi']}", 
+        r"(DAVALI:\s*Adı-Soyadı:)\s*[^\n]+",
+        f"\\1 {personal_info['davalı_adi_soyadi']}",
         dilekce_text
     )
-    
+
     # "DAVALI: T.C. Kimlik No" kısmını değiştirme
     dilekce_text = re.sub(
-        r"(T\.C\. Kimlik No:)\s*\d+", 
-        f"\\1 {personal_info['davalı_tc']}", 
+        r"(T\.C\. Kimlik No:)\s*\d+",
+        f"\\1 {personal_info['davalı_tc']}",
         dilekce_text
     )
-
-
 
     # Açıklamalar kısmını güncelleme
     dilekce_text = re.sub(
@@ -309,75 +311,78 @@ def customize_dilekce(dilekce_text, personal_info, court_info, tarih, marriage_d
         flags=re.DOTALL
     )
 
-   # Nafaka talebi kontrolü ve güncellemesi
+    # Nafaka talebi kontrolü ve güncellemesi
     if alimony_status == "talep_ediliyor" and nafaka_miktari:
         dilekce_text = update_alimony_in_text(dilekce_text, nafaka_miktari)
-        dilekce_text = update_tazminat_in_text(dilekce_text, tazminat_miktarı)
+        dilekce_text = update_tazminat_in_text(dilekce_text, tazminat_miktari)
+
     # Tarih kısmını güncelleme
     dilekce_text = re.sub(
-        r"(Tarih:)\s*\d+\.\d+\.\d+", 
-        f"\\1 {tarih}", 
+        r"(Tarih:)\s*\d+\.\d+\.\d+",
+        f"\\1 {tarih}",
         dilekce_text
     )
 
     # Çocuk bilgilerini güncelleme
-    if child_status == "var": 
-      dilekce_text = update_children_in_text(dilekce_text, children, personal_info)
+    if child_status == "var":
+        dilekce_text = update_children_in_text(dilekce_text, children, personal_info)
 
- 
     return dilekce_text
 
-
-        
-
-
-def process_and_customize_dilekce(dilekce_text,child_status, alimony_status):
+def process_and_customize_dilekce(dilekce_text, child_status, alimony_status, personal_info=None, court_info=None,
+                                  tarih=None, marriage_date=None, nafaka_miktari=None, tazminat_miktari=None, children=None):
     """
     Dilekçeyi kullanıcıdan alınan bilgilerle özelleştirir.
 
     :param dilekce_text: Orijinal dilekçe metni
+    :param child_status: Çocuk durumu
+    :param alimony_status: Nafaka durumu
+    :param personal_info: Kişisel bilgiler (opsiyonel)
+    :param court_info: Mahkeme bilgileri (opsiyonel)
+    :param tarih: Tarih (opsiyonel)
+    :param marriage_date: Evlilik tarihi (opsiyonel)
+    :param nafaka_miktari: Nafaka miktarı (opsiyonel)
+    :param tazminat_miktari: Tazminat miktarı (opsiyonel)
+    :param children: Çocuk bilgileri (opsiyonel)
     :return: Özelleştirilmiş dilekçe metni
     """
-    # Kullanıcıdan kişisel bilgileri al
-    personal_info = get_personal_info()
+    # If personal_info is not provided, get it interactively
+    if personal_info is None:
+        personal_info = get_personal_info()
 
-    # Kullanıcıdan mahkeme bilgisini al
-    court_info = get_court_info()
+    # If court_info is not provided, get it interactively
+    if court_info is None:
+        court_info = get_court_info()
 
-    # Nafaka talep ediliyorsa miktarını al
-    nafaka_miktari = None
-    if alimony_status == "talep_ediliyor":
+    # If tarih is not provided, get it interactively
+    if tarih is None:
+        tarih = get_tarih()
+
+    # If marriage_date is not provided, get it interactively
+    if marriage_date is None:
+        marriage_date = get_marriage_date()
+
+    # Handle nafaka_miktari
+    if alimony_status == "talep_ediliyor" and nafaka_miktari is None:
         nafaka_miktari = get_alimony_amount()
 
-    
-    tazminat_miktarı = None
-    if alimony_status == "talep_ediliyor":
-        tazminat_miktarı = get_tazminat_amount()
+    # Handle tazminat_miktari
+    if alimony_status == "talep_ediliyor" and tazminat_miktari is None:
+        tazminat_miktari = get_tazminat_amount()
+
+    # Handle children information
+    if child_status == "var" and children is None:
+        children = get_children_details()
 
     # Adresleri güncelle
     dilekce_text = update_defendant_address(dilekce_text, personal_info["davalı_adres"])
 
-
-    # Kullanıcıdan tarih bilgisini al
-    tarih = get_tarih()
-
-    # Kullanıcıdan evlilik tarihi al
-    marriage_date = get_marriage_date()
-
-    # Çocuk bilgilerini al
-    children = None
-    print("\nÇocuk Durumu: child_status ", child_status)
-    
-    if child_status == "var":
-        children = get_children_details()
-
     # Dilekçeyi özelleştir
     customized_dilekce = customize_dilekce(
-        dilekce_text, personal_info, court_info, tarih, marriage_date, alimony_status, nafaka_miktari, tazminat_miktarı, children, child_status
+        dilekce_text, personal_info, court_info, tarih, marriage_date,
+        alimony_status, nafaka_miktari, tazminat_miktari, children, child_status
     )
+
     customized_dilekce = replace_above_signature_with_davaci_name(customized_dilekce, personal_info)
 
-    # Özelleştirilmiş dilekçeyi yazdır
-    print("\n--- Özelleştirilmiş Dilekçe ---\n")
-    print(customized_dilekce)
     return customized_dilekce

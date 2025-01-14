@@ -1,7 +1,17 @@
-*.pyc
-.DS_Store
-backup
-chroma
+# But not these files...
+!.gitignore
+!*.py
 
-__pycache__
-.pytest_cache
+# ...even if they are in subdirectories
+!*/
+
+# Ignore Python bytecode files
+*.pyc
+
+# Ignore macOS system files
+.DS_Store
+
+# Ignore specific directories
+backup/
+chroma/
+__pycache__/
